@@ -78,13 +78,10 @@ if option == 'Patient Queue Management':
     # Display the filtered patient queue
     st.write(filtered_patients)
     
-    # Pie chart for Patient Condition distribution
-    condition_dist = filtered_patients['Condition'].value_counts()
-    fig = px.pie(values=condition_dist, names=condition_dist.index, title="Patient Condition Distribution")
-    st.plotly_chart(fig)
-    
-    # Gantt Chart for Patient Flow (if needed)
-    fig = px.timeline(filtered_patients, x_start="Age", x_end="Age", y="Name", color="Status")
+    # Ribbon Chart (Stacked Bar Chart) for Patient Flow (Queue Visualization)
+    status_dist = filtered_patients['Status'].value_counts().reset_index()
+    status_dist.columns = ['Status', 'Count']
+    fig = px.bar(status_dist, x='Status', y='Count', color='Status', title="Patient Queue Status Distribution")
     st.plotly_chart(fig)
 
 # Bed Allocation Dashboard
@@ -166,4 +163,3 @@ elif option == 'Hospital Equipment':
     equipment_condition_dist = filtered_equipment['Condition'].value_counts()
     fig = px.pie(values=equipment_condition_dist, names=equipment_condition_dist.index, title="Equipment Condition Distribution")
     st.plotly_chart(fig)
-
