@@ -40,7 +40,18 @@ for med in medicines:
     med_inventory.append([med, quantity, expiry_date, low_stock_threshold, added_date])
 
 med_inventory_df = pd.DataFrame(med_inventory, columns=["Medicine Name", "Quantity", "Expiry Date", "Low Stock Threshold", "Added Date"])
-med_inventory_df['Status'] = med_inventory_df['Quantity'].apply(lambda x: 'Low Stock' if x <= med_inventory_df['Low Stock Threshold'] else 'Sufficient')
+
+# Ensure the data types are correct and handle NaN values
+med_inventory_df['Quantity'] = pd.to_numeric(med_inventory_df['Quantity'], errors='coerce')  # Convert to numeric, replace errors with NaN
+med_inventory_df['Low Stock Threshold'] = pd.to_numeric(med_inventory_df['Low Stock Threshold'], errors='coerce')
+
+# Fill NaN values in 'Low Stock Threshold' with a default value if needed, or drop them
+med_inventory_df['Low Stock Threshold'] = med_inventory_df['Low Stock Threshold'].fillna(0)
+
+# Calculate 'Status' based on 'Quantity' and 'Low Stock Threshold'
+med_inventory_df['Status'] = med_inventory_df['Quantity'].apply(
+    lambda x: 'Low Stock' if x <= med_inventory_df['Low Stock Threshold'] else 'Sufficient'
+)
 
 # 3. Medical Equipment Data (Indian Brands and Status)
 equipment_types = ['Ventilator', 'ECG Machine', 'Defibrillator', 'Syringe Pump', 'Infusion Pump', 'X-Ray Machine']
