@@ -78,10 +78,13 @@ if option == 'Patient Queue Management':
     # Display the filtered patient queue
     st.write(filtered_patients)
     
-    # Ribbon Chart (Stacked Bar Chart) for Patient Flow (Queue Visualization)
-    status_dist = filtered_patients['Status'].value_counts().reset_index()
-    status_dist.columns = ['Status', 'Count']
-    fig = px.bar(status_dist, x='Status', y='Count', color='Status', title="Patient Queue Status Distribution")
+    # Pie chart for Patient Condition distribution
+    condition_dist = filtered_patients['Condition'].value_counts()
+    fig = px.pie(values=condition_dist, names=condition_dist.index, title="Patient Condition Distribution")
+    st.plotly_chart(fig)
+    
+    # Gantt Chart for Patient Flow (if needed)
+    fig = px.timeline(filtered_patients, x_start="Age", x_end="Age", y="Name", color="Status")
     st.plotly_chart(fig)
 
 # Bed Allocation Dashboard
@@ -121,45 +124,36 @@ elif option == 'Medicine Inventory':
     fig = px.pie(values=status_summary, names=status_summary.index, title="Stock Status Summary")
     st.plotly_chart(fig)
     
-    # Visualize Low Stock Threshold for Medicines with Bullet Chart
-    st.subheader("Low Stock Threshold Visualization")
-    
-    for _, row in filtered_medicines.iterrows():
-        # Bullet chart to display low stock threshold against the current stock
-        fig = go.Figure(go.Indicator(
-            mode="number+gauge+delta",
-            value=row['Quantity'],
-            delta={'reference': row['Low Stock Threshold'], 'position': "top", 'valueformat': ".0f"},
-            gauge={
-                'shape': "bullet",
-                'axis': {'range': [0, row['Low Stock Threshold'] * 2]},
-                'steps': [
-                    {'range': [0, row['Low Stock Threshold']], 'color': "red"},
-                    {'range': [row['Low Stock Threshold'], row['Low Stock Threshold'] * 2], 'color': "green"}
-                ],
-            },
-            title={'text': f"{row['Name']} Stock Level"}
-        ))
-        st.plotly_chart(fig)
-    
-    # Filter by Low Stock Threshold (Slider)
+    # Display Low Stock Threshold for Medicines
+    st.subheader("Low Stock Threshold Overview")
     low_stock_threshold = st.slider("Select Minimum Quantity", min_value=0, max_value=100, value=10)
     low_stock_data = med_stock_status[med_stock_status['Quantity'] <= low_stock_threshold]
-    st.subheader(f"Medicines with Stock <= {low_stock_threshold}")
+    st.write(f"Medicines with stock <= {low_stock_threshold}")
     st.write(low_stock_data)
 
 # Hospital Equipment Inventory Dashboard
 elif option == 'Hospital Equipment':
     st.header("Hospital Equipment Inventory Overview")
     
-    # Filter by Equipment Condition
-    equipment_filter = st.selectbox("Filter by Equipment Condition", equipment_inventory['Condition'].unique())
-    filtered_equipment = equipment_inventory[equipment_inventory['Condition'] == equipment_filter]
+    # Filter by Equipment Name
+    equipment_filter = st.selectbox("Filter by Equipment", equipment_inventory['Name'].unique())
+    filtered_equipment = equipment_inventory[equipment_inventory['Name'] == equipment_filter]
     
     # Display filtered equipment data
     st.write(filtered_equipment)
     
-    # Pie chart for Equipment Condition distribution
-    equipment_condition_dist = filtered_equipment['Condition'].value_counts()
-    fig = px.pie(values=equipment_condition_dist, names=equipment_condition_dist.index, title="Equipment Condition Distribution")
+    # Equipment Quantity Distribution (Bar Chart)
+    st.subheader(f"Quantity Distribution for {equipment_filter}")
+    st.bar_chart(filtered_equipment.set_index('Name')['Quantity'])
+    
+    # Condition Summary (Pie Chart)
+    st.subheader("Condition Summary")
+    condition_summary = filtered_equipment['Condition'].value_counts()
+    fig = px.pie(values=condition_summary, names=condition_summary.index, title="Equipment Condition Summary")
     st.plotly_chart(fig)
+    
+    # Filter by Equipment Condition (Slider)
+    condition_filter = st.selectbox("Filter by Condition", equipment_inventory['Condition'].unique())
+    condition_filtered_data = equipment_inventory[equipment_inventory['Condition'] == condition_filter]
+    st.subheader(f"Equipment with {condition_filter} Condition")
+    st.write(condition_filtered_data)
