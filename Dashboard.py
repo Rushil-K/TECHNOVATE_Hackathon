@@ -6,13 +6,18 @@ import plotly.express as px
 
 # Simulate data for all prototypes
 
-# Patient Queue Data
+# Patient Queue Data with Indian Names
 patients = [
-    {"Name": "John Doe", "Age": 30, "Condition": "Critical", "Bed Required": "ICU", "Status": "Waiting"},
-    {"Name": "Jane Smith", "Age": 25, "Condition": "Stable", "Bed Required": "General", "Status": "Admitted"},
-    {"Name": "Sam Brown", "Age": 60, "Condition": "Emergency", "Bed Required": "Emergency", "Status": "Waiting"},
-    {"Name": "Anna Lee", "Age": 40, "Condition": "Critical", "Bed Required": "ICU", "Status": "Admitted"},
-    {"Name": "Mike Green", "Age": 50, "Condition": "Stable", "Bed Required": "General", "Status": "Waiting"}
+    {"Name": "Aarav Sharma", "Age": 30, "Condition": "Critical", "Bed Required": "ICU", "Status": "Waiting"},
+    {"Name": "Priya Verma", "Age": 25, "Condition": "Stable", "Bed Required": "General", "Status": "Admitted"},
+    {"Name": "Ravi Patel", "Age": 60, "Condition": "Emergency", "Bed Required": "Emergency", "Status": "Waiting"},
+    {"Name": "Neha Gupta", "Age": 40, "Condition": "Critical", "Bed Required": "ICU", "Status": "Admitted"},
+    {"Name": "Vikram Singh", "Age": 50, "Condition": "Stable", "Bed Required": "General", "Status": "Waiting"},
+    {"Name": "Ishaan Yadav", "Age": 55, "Condition": "Critical", "Bed Required": "ICU", "Status": "Admitted"},
+    {"Name": "Sanya Khanna", "Age": 28, "Condition": "Stable", "Bed Required": "General", "Status": "Admitted"},
+    {"Name": "Rohit Mehta", "Age": 70, "Condition": "Emergency", "Bed Required": "Emergency", "Status": "Waiting"},
+    {"Name": "Shivani Reddy", "Age": 45, "Condition": "Stable", "Bed Required": "General", "Status": "Admitted"},
+    {"Name": "Aman Kapoor", "Age": 33, "Condition": "Critical", "Bed Required": "ICU", "Status": "Waiting"}
 ]
 
 # Bed Allocation Data
@@ -24,19 +29,31 @@ beds = [
     {"Bed Type": "ICU", "Status": "Available"}
 ]
 
-# Medicine Inventory Data
+# Medicine Inventory Data with Indian Medicines
 medicines = [
-    {"Name": "Aspirin", "Quantity": random.randint(1, 100), "Expiry Date": (datetime.now() + timedelta(days=random.randint(30, 365))).strftime("%Y-%m-%d"), "Low Stock Threshold": 10},
-    {"Name": "Paracetamol", "Quantity": random.randint(1, 100), "Expiry Date": (datetime.now() + timedelta(days=random.randint(30, 365))).strftime("%Y-%m-%d"), "Low Stock Threshold": 20},
+    {"Name": "Paracetamol", "Quantity": random.randint(1, 100), "Expiry Date": (datetime.now() + timedelta(days=random.randint(30, 365))).strftime("%Y-%m-%d"), "Low Stock Threshold": 10},
+    {"Name": "Aspirin", "Quantity": random.randint(1, 100), "Expiry Date": (datetime.now() + timedelta(days=random.randint(30, 365))).strftime("%Y-%m-%d"), "Low Stock Threshold": 20},
     {"Name": "Ibuprofen", "Quantity": random.randint(1, 100), "Expiry Date": (datetime.now() + timedelta(days=random.randint(30, 365))).strftime("%Y-%m-%d"), "Low Stock Threshold": 15},
     {"Name": "Amoxicillin", "Quantity": random.randint(1, 100), "Expiry Date": (datetime.now() + timedelta(days=random.randint(30, 365))).strftime("%Y-%m-%d"), "Low Stock Threshold": 25},
     {"Name": "Metformin", "Quantity": random.randint(1, 100), "Expiry Date": (datetime.now() + timedelta(days=random.randint(30, 365))).strftime("%Y-%m-%d"), "Low Stock Threshold": 30},
+    {"Name": "Azithromycin", "Quantity": random.randint(1, 100), "Expiry Date": (datetime.now() + timedelta(days=random.randint(30, 365))).strftime("%Y-%m-%d"), "Low Stock Threshold": 15},
+    {"Name": "Cetirizine", "Quantity": random.randint(1, 100), "Expiry Date": (datetime.now() + timedelta(days=random.randint(30, 365))).strftime("%Y-%m-%d"), "Low Stock Threshold": 10}
+]
+
+# Hospital Equipment Inventory
+equipment = [
+    {"Name": "Defibrillator", "Quantity": random.randint(1, 20), "Condition": "Good"},
+    {"Name": "Ventilator", "Quantity": random.randint(1, 20), "Condition": "Good"},
+    {"Name": "ECG Machine", "Quantity": random.randint(1, 20), "Condition": "Fair"},
+    {"Name": "X-Ray Machine", "Quantity": random.randint(1, 10), "Condition": "Good"},
+    {"Name": "Blood Pressure Monitor", "Quantity": random.randint(1, 50), "Condition": "Excellent"}
 ]
 
 # Convert to DataFrames
 patient_queue = pd.DataFrame(patients)
 bed_allocation = pd.DataFrame(beds)
 med_stock_status = pd.DataFrame(medicines)
+equipment_inventory = pd.DataFrame(equipment)
 
 # Apply logic to calculate stock status
 med_stock_status['Status'] = med_stock_status.apply(
@@ -47,7 +64,7 @@ med_stock_status['Status'] = med_stock_status.apply(
 st.title("Hospital Management Dashboard")
 
 # Sidebar for navigation
-option = st.sidebar.selectbox('Choose a Dashboard', ('Patient Queue Management', 'Bed Allocation', 'Medicine Inventory'))
+option = st.sidebar.selectbox('Choose a Dashboard', ('Patient Queue Management', 'Bed Allocation', 'Medicine Inventory', 'Hospital Equipment'))
 
 # Patient Queue Management Dashboard
 if option == 'Patient Queue Management':
@@ -105,4 +122,29 @@ elif option == 'Medicine Inventory':
     low_stock_data = med_stock_status[med_stock_status['Quantity'] <= low_stock_threshold]
     st.subheader(f"Medicines with Stock <= {low_stock_threshold}")
     st.write(low_stock_data)
-  
+
+# Hospital Equipment Inventory Dashboard
+elif option == 'Hospital Equipment':
+    st.header("Hospital Equipment Inventory Overview")
+    
+    # Filter by Equipment Name
+    equipment_filter = st.selectbox("Filter by Equipment", equipment_inventory['Name'].unique())
+    filtered_equipment = equipment_inventory[equipment_inventory['Name'] == equipment_filter]
+    
+    # Display filtered equipment data
+    st.write(filtered_equipment)
+    
+    # Equipment Quantity Distribution (Bar Chart)
+    st.subheader(f"Quantity Distribution for {equipment_filter}")
+    st.bar_chart(filtered_equipment.set_index('Name')['Quantity'])
+    
+    # Equipment Condition Summary
+    st.subheader("Condition Summary")
+    condition_summary = filtered_equipment['Condition'].value_counts()
+    st.write(condition_summary)
+    
+    # Filter by Equipment Condition (Slider)
+    condition_filter = st.selectbox("Filter by Condition", equipment_inventory['Condition'].unique())
+    condition_filtered_data = equipment_inventory[equipment_inventory['Condition'] == condition_filter]
+    st.subheader(f"Equipment with {condition_filter} Condition")
+    st.write(condition_filtered_data)
