@@ -1,4 +1,6 @@
 streamlit
 pandas
 pyngrok
-
+plotly
+matplotlib
+numpy
