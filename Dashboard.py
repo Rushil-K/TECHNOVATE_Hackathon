@@ -1,95 +1,110 @@
 import streamlit as st
 import pandas as pd
-import datetime as dt
+import numpy as np
+import random
+from datetime import datetime
+import plotly.express as px
+import matplotlib.pyplot as plt
 
-# Dummy data
+# Dummy Data Creation
 
-# Patient Queue Management System
-patients = [
-    {"id": 1, "name": "Alice", "age": 30, "condition": "Critical", "bed_requirement": "ICU"},
-    {"id": 2, "name": "Bob", "age": 45, "condition": "Emergency", "bed_requirement": "Emergency"},
-    {"id": 3, "name": "Charlie", "age": 20, "condition": "Stable", "bed_requirement": "General"},
-]
+# Medicine Inventory Data
+medicines_data = pd.DataFrame({
+    'Name': ['Paracetamol', 'Ibuprofen', 'Aspirin', 'Amoxicillin', 'Metformin'],
+    'Quantity': [random.randint(5, 50) for _ in range(5)],
+    'Expiry Date': [datetime(2025, random.randint(1, 12), random.randint(1, 28)).strftime('%Y-%m-%d') for _ in range(5)],
+    'Low Stock Threshold': [10, 10, 15, 5, 20],
+})
 
-# Bed Allocation System
-beds = {
-    "ICU": {"total": 10, "occupied": 7},
-    "Emergency": {"total": 5, "occupied": 3},
-    "General": {"total": 20, "occupied": 12},
-}
+# Patient Queue Data
+patients_data = pd.DataFrame({
+    'Patient ID': [f'P{1001 + i}' for i in range(5)],
+    'Name': ['John Doe', 'Jane Smith', 'Alice Brown', 'Bob Johnson', 'Emily Davis'],
+    'Condition': ['Critical', 'Routine', 'Emergency', 'Routine', 'Critical'],
+    'Bed Required': ['ICU', 'General', 'Emergency', 'General', 'ICU'],
+    'Priority': [1, 3, 2, 3, 1],
+})
 
-# Medicine Inventory System
-medicines = [
-    {"name": "Paracetamol", "quantity": 50, "expiry_date": "2025-12-01", "low_stock_threshold": 20},
-    {"name": "Aspirin", "quantity": 15, "expiry_date": "2024-05-10", "low_stock_threshold": 10},
-    {"name": "Insulin", "quantity": 5, "expiry_date": "2025-03-01", "low_stock_threshold": 10},
-]
+# Bed Allocation Data
+bed_data = pd.DataFrame({
+    'Bed ID': [f'B{101 + i}' for i in range(5)],
+    'Unit': ['ICU', 'General', 'Emergency', 'General', 'ICU'],
+    'Occupied': [random.choice([True, False]) for _ in range(5)],
+})
 
-# Streamlit Dashboard Setup
+# Streamlit Page Configuration
 st.set_page_config(page_title="Hospital Management Dashboard", layout="wide")
 
-# Dashboard Title
+# Dashboard Header
 st.title("🏥 Hospital Management Dashboard")
+st.markdown("Manage patient queues, bed allocation, and medicine inventory seamlessly.")
 
-# Section 1: Patient Queue Management
-st.subheader("Patient Queue Management")
-st.write("The following table shows the current patient queue in the hospital:")
-patient_df = pd.DataFrame(patients)
-st.table(patient_df)
+# Medicine Inventory Section
+st.header("Medicine Inventory Management")
+st.subheader("Filter Medicine Data")
 
-# Section 2: Bed Allocation System
-st.subheader("Bed Allocation System")
-st.write("Real-time status of hospital bed availability:")
+# Filters (Slicers)
+medicine_name_filter = st.selectbox("Filter by Medicine Name", ['All'] + medicines_data['Name'].tolist())
+quantity_filter = st.slider("Filter by Quantity", min_value=0, max_value=50, value=(0, 50))
 
-col1, col2, col3 = st.columns(3)
+# Filter the data based on slicers
+filtered_medicines = medicines_data[
+    (medicines_data['Name'].str.contains(medicine_name_filter, case=False) | (medicine_name_filter == 'All')) &
+    (medicines_data['Quantity'].between(quantity_filter[0], quantity_filter[1]))
+]
 
-for category, bed_info in beds.items():
-    with col1 if category == "ICU" else col2 if category == "Emergency" else col3:
-        st.metric(
-            label=category,
-            value=f"{bed_info['occupied']}/{bed_info['total']} occupied",
-            delta=bed_info['total'] - bed_info['occupied'],
-        )
+# Medicine Stock Status Pie Chart
+med_stock_status = filtered_medicines.copy()
+med_stock_status['Status'] = med_stock_status['Quantity'].apply(lambda x: 'Low Stock' if x <= med_stock_status['Low Stock Threshold'] else 'Sufficient')
 
-# Section 3: Medicine Inventory System
-st.subheader("Medicine Inventory System")
-st.write("Below is the current inventory of medicines in the hospital:")
-medicine_df = pd.DataFrame(medicines)
-medicine_df["status"] = medicine_df.apply(
-    lambda x: "Low Stock" if x["quantity"] <= x["low_stock_threshold"] else "Sufficient", axis=1
-)
-st.table(medicine_df)
+# Plotting Pie Chart for Medicine Stock Status
+fig = px.pie(med_stock_status, names='Status', title='Medicine Stock Status', color='Status', 
+             color_discrete_map={'Low Stock': 'red', 'Sufficient': 'green'})
+st.plotly_chart(fig)
 
-# Alerts for Low Stock Medicines
-st.subheader("Alerts")
-low_stock_meds = medicine_df[medicine_df["status"] == "Low Stock"]
-if not low_stock_meds.empty:
-    st.warning("Low Stock Alert for Medicines:")
-    st.table(low_stock_meds)
-else:
-    st.success("All medicines are sufficiently stocked!")
+# Display filtered medicines table
+st.dataframe(filtered_medicines)
 
-# Section 4: Add New Medicine
-st.subheader("Manage Inventory")
-st.write("Use the form below to add new medicines to the inventory:")
+# Patient Queue Section
+st.header("Patient Queue Management")
+st.subheader("Filter Patient Queue")
 
-with st.form("add_medicine"):
-    med_name = st.text_input("Medicine Name")
-    quantity = st.number_input("Quantity", min_value=0, step=1)
-    expiry_date = st.date_input("Expiry Date", min_value=dt.date.today())
-    low_stock_threshold = st.number_input("Low Stock Threshold", min_value=0, step=1)
-    submitted = st.form_submit_button("Add Medicine")
-    if submitted:
-        new_medicine = {
-            "name": med_name,
-            "quantity": quantity,
-            "expiry_date": expiry_date.strftime("%Y-%m-%d"),
-            "low_stock_threshold": low_stock_threshold,
-        }
-        medicines.append(new_medicine)
-        st.success(f"Added new medicine: {med_name}")
+# Filters (Slicers)
+condition_filter = st.selectbox("Filter by Condition", ['All'] + patients_data['Condition'].unique().tolist())
+priority_filter = st.slider("Filter by Priority", min_value=1, max_value=3, value=(1, 3))
 
-# Footer
-st.write("---")
-st.caption("Developed for a hospital management system prototype.")
+# Filter the data based on slicers
+filtered_patients = patients_data[
+    (patients_data['Condition'].str.contains(condition_filter, case=False) | (condition_filter == 'All')) &
+    (patients_data['Priority'].between(priority_filter[0], priority_filter[1]))
+]
+
+# Display filtered patients table
+st.dataframe(filtered_patients)
+
+# Bed Allocation Section
+st.header("Bed Allocation Management")
+st.subheader("Filter Bed Data")
+
+# Filters (Slicers)
+unit_filter = st.selectbox("Filter by Unit", ['All'] + bed_data['Unit'].unique().tolist())
+status_filter = st.selectbox("Filter by Status", ['All', 'Occupied', 'Available'])
+
+# Filter the data based on slicers
+filtered_beds = bed_data[
+    (bed_data['Unit'].str.contains(unit_filter, case=False) | (unit_filter == 'All')) &
+    ((bed_data['Occupied'] == (status_filter == 'Occupied')) | (status_filter == 'All'))
+]
+
+# Bed Availability Bar Chart
+bed_availability = filtered_beds.groupby('Unit')['Occupied'].value_counts().unstack().fillna(0)
+bed_availability_plot = bed_availability.plot(kind='bar', stacked=True, color=['#ff4d4d', '#4dff4d'], figsize=(10, 6))
+bed_availability_plot.set_ylabel('Count of Beds')
+bed_availability_plot.set_title('Bed Availability by Unit')
+
+# Display the bar chart
+st.pyplot(bed_availability_plot)
+
+# Display filtered bed data table
+st.dataframe(filtered_beds)
 
