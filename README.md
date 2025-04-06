@@ -1,6 +1,6 @@
 # Visionary Vortex - TECHNOVATE Hackathon - Hospital Management System
 
-**Team Members:** Rushil Kohli, Khushi Kalra, Swati Kaushik, Radhika Sarin, Mohit Vaidya
+**Team Members:** Khushi Kalra, Rushil Kohli, Radhika Sarin, Swati Kaushik, Mohit Vaidya
 
 This repository documents our work as Team Visionary Vortex during the TECHNOVATE Hackathon at FORE School of Management. We developed prototypes for a Hospital Management System, which was awarded the 1st Prize in the competition.
 
